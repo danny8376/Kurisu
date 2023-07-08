@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 # adapted from luma3ds_exception_dump_parser
 handledExceptionNames = ("FIQ", "undefined instruction", "prefetch abort", "data abort")
-registerNames = tuple("r{0}".format(i) for i in range(13)) + ("sp", "lr", "pc", "cpsr") + ("dfsr", "ifsr", "far") + ("fpexc", "fpinst", "fpinst2")
+# registerNames = tuple("r{0}".format(i) for i in range(13)) + ("sp", "lr", "pc", "cpsr") + ("dfsr", "ifsr", "far") + ("fpexc", "fpinst", "fpinst2")
 svcBreakReasons = ("(svcBreak: panic)", "(svcBreak: assertion failed)", "(svcBreak: user-related)")
 faultStatusSources = {
     0b1: 'Alignment', 0b100: 'Instruction cache maintenance operation fault',
@@ -85,16 +85,23 @@ class Luma3DSDumpConvert(commands.Cog):
             else:
                 out_message += "Arm9 RAM dump exist, size {0:x}\n".format(additionalDataSize)
 
-        out_message += "\nRegister dump:\n"
-        for i in range(0, nbRegisters - (nbRegisters % 2), 2):
-            if i == 16:
-                out_message += "\n"
-            out_message += "{0:<8}{1:<12}{2:<8}{3:<12}\n".format(registerNames[i], "{0:08x}".format(registers[i]), registerNames[i+1], "{0:08x}".format(registers[i+1]))
-        if nbRegisters % 2 == 1:
-            out_message += "{0:<8}{1:<12}\n".format(registerNames[nbRegisters - 1], "{0:08x}".format(registers[nbRegisters - 1]))
+        if processor == 11:
+            if exceptionType == 3:
+                out_message += "\n{0:<8}{1:<12}Access type: {2}\n".format("r0", "{0:08x}".format(registers[0]), "Write" if registers[17] & (1 << 11) != 0 else "Read")
+            else:
+                out_message += "{0:<8}{1:<12}\n".format("r0", "{0:08x}".format(registers[0]))
 
-        if processor == 11 and exceptionType == 3:
-            out_message += "{0:<8}{1:<12}Access type: {2}\n".format("FAR", "{0:08x}".format(registers[19]), "Write" if registers[17] & (1 << 11) != 0 else "Read")
+        #     out_message += "{0:<8}{1:<12}Access type: {2}\n".format("FAR", "{0:08x}".format(registers[19]), "Write" if registers[17] & (1 << 11) != 0 else "Read")
+        # out_message += "\nRegister dump:\n"
+        # for i in range(0, nbRegisters - (nbRegisters % 2), 2):
+        #     if i == 16:
+        #         out_message += "\n"
+        #     out_message += "{0:<8}{1:<12}{2:<8}{3:<12}\n".format(registerNames[i], "{0:08x}".format(registers[i]), registerNames[i+1], "{0:08x}".format(registers[i+1]))
+        # if nbRegisters % 2 == 1:
+        #     out_message += "{0:<8}{1:<12}\n".format(registerNames[nbRegisters - 1], "{0:08x}".format(registers[nbRegisters - 1]))
+
+        # if processor == 11 and exceptionType == 3:
+        #     out_message += "{0:<8}{1:<12}Access type: {2}\n".format("FAR", "{0:08x}".format(registers[19]), "Write" if registers[17] & (1 << 11) != 0 else "Read")
 
         return out_message
 
